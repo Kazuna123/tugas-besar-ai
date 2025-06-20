@@ -27,8 +27,8 @@ st.title("📊 Analisis Data Tunarungu & Deteksi Kualitas Suara")
 
 st.markdown("""
 Aplikasi ini memiliki dua fitur utama:
-1. **📄 Analisis Data Tunarungu berdasarkan CSV**: Lihat data jumlah tunarungu berdasarkan provinsi, kabupaten, kecamatan, dan desa. Termasuk filter, visualisasi, dan ekspor hasil.
-2. **🎙️ Deteksi Kualitas Suara berdasarkan File Audio**: Menggunakan fitur suara seperti energi sinyal dan MFCC untuk mengklasifikasikan kualitas suara menjadi **Bagus**, **Sedang**, atau **Jelek**.
+1. **📄 Analisis Data Tunarungu berdasarkan CSV**  
+2. **🎙️ Deteksi Kualitas Suara berdasarkan File Audio**
 
 ---
 """)
@@ -40,21 +40,19 @@ menu = st.sidebar.radio("🔎 Pilih Jenis Analisis:", ["📄 Unggah CSV", "🎙�
 if menu == "📄 Unggah CSV":
     st.header("📄 Analisis Data CSV Tunarungu")
     st.markdown("""
-    **📘 Penjelasan:**
-    - Data ini berisi informasi jumlah tunarungu per wilayah administratif.
-    - Anda dapat melakukan filter berdasarkan Provinsi, Kabupaten, Kecamatan, dan Desa.
-    - Visualisasi akan memperlihatkan jumlah tunarungu di setiap desa hasil filter.
+    **📘 Penjelasan:**  
+    - Data ini berisi informasi jumlah tunarungu per wilayah.  
+    - Bisa difilter berdasarkan Provinsi, Kabupaten, Kecamatan, dan Desa.  
+    - Tampilkan grafik dan ekspor CSV.
     """)
-    
+
     uploaded_csv = st.file_uploader("Unggah file CSV", type=["csv"])
 
     if uploaded_csv:
         df = pd.read_csv(uploaded_csv, delimiter=';')
-
-        st.subheader("🗂️ Data Awal (Preview)")
+        st.subheader("🗂️ Data Awal")
         st.dataframe(df.head())
 
-        # Filter interaktif
         st.subheader("📍 Filter Wilayah")
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -84,7 +82,7 @@ if menu == "📄 Unggah CSV":
             fig, ax = plt.subplots(figsize=(10,4))
             filtered.plot(kind='bar', x=filtered.columns[7], y=filtered.columns[9], ax=ax, color='teal')
             ax.set_ylabel("Jumlah")
-            ax.set_title("Distribusi Tunarungu ")
+            ax.set_title("Distribusi Tunarungu")
             plt.xticks(rotation=45, ha='right')
             st.pyplot(fig)
 
@@ -92,7 +90,6 @@ if menu == "📄 Unggah CSV":
         csv_out = filtered.to_csv(index=False, sep=';').encode('utf-8')
         st.download_button("⬇️ Download Data CSV", csv_out, "data_tunarungu_filter.csv", "text/csv")
 
-        # Kesimpulan akhir
         st.subheader("📌 Ringkasan Data")
         st.markdown(f"Total baris hasil filter: **{len(filtered)}**")
         st.markdown(f"Total tunarungu : **{filtered.iloc[:,9].sum()} jiwa**")
@@ -104,17 +101,13 @@ else:
 
     st.header("🎙️ Deteksi Kualitas Suara")
     st.markdown("""
-    **📘 Penjelasan Klasifikasi Suara:**
-
-    Kualitas suara diklasifikasikan berdasarkan **energi sinyal rata-rata (RMS)**:
+    **📘 Penjelasan Klasifikasi Suara:**  
 
     | Kategori | Simbol | Energi RMS | Penjelasan |
     |----------|--------|-------------|-------------|
     | Bagus    | 🟩     | > 0.03      | Suara jernih, stabil, minim noise |
     | Sedang   | 🟨     | 0.01 – 0.03 | Cukup jelas, sedikit noise |
     | Jelek    | 🟥     | < 0.01      | Pelan, noise tinggi, tidak jelas |
-
-    🔍 Visualisasi MFCC membantu melihat karakteristik frekuensi suara.
     """)
 
     audio = st.file_uploader("Unggah file suara (.wav)", type=["wav"])
@@ -126,21 +119,21 @@ else:
         mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40)
         mfcc_mean = np.mean(mfcc.T, axis=0)
 
-        # Klasifikasi suara
+        # Klasifikasi
         if energy < 0.01:
             kualitas = "🟥 Jelek"
             deskripsi = "Suara sangat pelan atau penuh noise."
         elif energy < 0.03:
             kualitas = "🟨 Sedang"
-            deskripsi = "Suara cukup jelas namun terdapat gangguan."
+            deskripsi = "Suara cukup jelas namun ada gangguan."
         else:
             kualitas = "🟩 Bagus"
-            deskripsi = "Suara jernih, stabil, dan minim noise."
+            deskripsi = "Suara jernih dan stabil."
 
         st.markdown(f"<div class='small-font'>🎯 <b>Kualitas Suara:</b> {kualitas}<br>📝 <b>Deskripsi:</b> {deskripsi}</div>", unsafe_allow_html=True)
 
-        # Diagram MFCC
-        st.subheader("🎵 Visualisasi MFCC (Koefisien)")
+        # Visualisasi MFCC
+        st.subheader("🎵 Visualisasi MFCC (Mel-Frequency Cepstral Coefficients)")
         fig2, ax2 = plt.subplots(figsize=(8,3))
         ax2.plot(mfcc_mean[:20], marker='o', color='indigo')
         ax2.set_title("Rata-rata MFCC (20 Pertama)")
@@ -148,26 +141,44 @@ else:
         ax2.set_ylabel("Nilai")
         st.pyplot(fig2)
 
-        # Tampilkan MFCC[0–9] dan interpretasi
-        st.markdown("📋 <b>Detail MFCC[0–9] dan Interpretasi</b>", unsafe_allow_html=True)
-        penjelasan = [
-            "Energi dasar suara (volume dan intensitas)",
-            "Frekuensi rendah (berat atau tipisnya suara)",
-            "Nada dasar dan intonasi", 
-            "Fluktuasi nada", 
-            "Kompleksitas suara menengah", 
-            "Komponen desis atau noise", 
-            "Kontur resonansi tinggi",
-            "Artikulasi tajam", 
-            "Detail suara halus", 
-            "Perubahan cepat/distorsi"
+        # Penjelasan MFCC
+        st.markdown("📋 <b>Apa Itu MFCC?</b>", unsafe_allow_html=True)
+        st.markdown("""
+        **MFCC (Mel-Frequency Cepstral Coefficients)** adalah cara komputer membaca suara manusia.  
+        MFCC digunakan untuk melihat apakah suara jernih, pelan, kasar, atau goyang.  
+        Berikut penjelasan sederhana untuk tiap bagian suara:
+        """)
+
+        st.markdown("📊 <b>Interpretasi Sederhana MFCC[0–9]</b>", unsafe_allow_html=True)
+        interpretasi_mfcc = [
+            "**MFCC[0] – Kekuatan suara**: Kalau rendah, suara pelan. 👉 *Latihan: Bicara lebih lantang.*",
+            "**MFCC[1] – Tebal atau tipis suara**: 👉 *Latihan: Ucapkan vokal 'O', 'U' dengan penuh.*",
+            "**MFCC[2] – Intonasi suara**: 👉 *Latihan: Ucapkan kalimat seperti menyanyi.*",
+            "**MFCC[3] – Stabil/tidaknya suara**: 👉 *Latihan: Bicara perlahan dan stabil.*",
+            "**MFCC[4] – Huruf tengah jelas**: 👉 *Latihan: Ucapkan kata 'kata', 'satu', 'kita'.*",
+            "**MFCC[5] – Desis/gangguan**: 👉 *Latihan: Bicara di tempat tenang.*",
+            "**MFCC[6] – Suara terlalu tinggi**: 👉 *Latihan: Bicara rileks, mulut terbuka alami.*",
+            "**MFCC[7] – Kejelasan kata**: 👉 *Latihan: Latihan bicara di depan kaca.*",
+            "**MFCC[8] – Detail halus suara**: 👉 *Latihan: Ucapkan perlahan dan jelas.*",
+            "**MFCC[9] – Suara goyang/distorsi**: 👉 *Latihan: Bicara dengan napas panjang.*"
         ]
-        mfcc_table = pd.DataFrame({
-            "Koefisien": [f"MFCC[{i}]" for i in range(10)],
-            "Nilai": [round(m, 2) for m in mfcc_mean[:10]],
-            "Deskripsi": penjelasan
-        })
-        st.dataframe(mfcc_table.style.set_table_attributes("class='compact-table'"), use_container_width=True)
+        for i in interpretasi_mfcc:
+            st.markdown(f"- {i}")
+
+        # Kesimpulan
+        st.subheader("💡 Kesimpulan & Saran untuk Teman Tunarungu")
+        st.markdown("""
+MFCC membantu melihat bagian suara yang perlu dilatih. Nilainya bukan salah/benar, tapi jadi panduan latihan.
+
+✅ **Tips untuk latihan:**
+- Gunakan tempat sunyi untuk latihan.
+- Lihat mulut di cermin saat bicara.
+- Rekam dan dengarkan suara sendiri.
+- Latihan rutin = suara makin baik.
+
+❤️ Suaramu unik dan bisa terus berkembang.  
+Semangat terus ya! Kamu pasti bisa. 💪
+""")
 
         # Ekspor hasil
         hasil_df = pd.DataFrame({
@@ -180,8 +191,7 @@ else:
 
         st.download_button("⬇️ Download Hasil Suara (CSV)", hasil_df.to_csv(index=False).encode("utf-8"), "hasil_suara.csv", "text/csv")
 
-        # Simpulan akhir
         st.subheader("📌 Ringkasan Hasil Suara")
         st.markdown(f"File **{audio.name}** diklasifikasikan sebagai: **{kualitas}**")
         st.markdown(f"Rata-rata energi sinyal: **{round(energy, 5)}**")
-        st.markdown("Interpretasi MFCC menunjukkan karakteristik frekuensi yang konsisten dengan hasil klasifikasi kualitas suara.")
+        st.markdown("Interpretasi MFCC menunjukkan bagian suara yang sudah baik dan yang masih bisa ditingkatkan.")
